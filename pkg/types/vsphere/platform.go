@@ -134,8 +134,6 @@ type Platform struct {
 	// LoadBalancer is available in TechPreview.
 	// +optional
 	LoadBalancer *configv1.VSpherePlatformLoadBalancer `json:"loadBalancer,omitempty"`
-	// Hosts defines network configurations to be applied by the installer. Hosts is available in TechPreview.
-	Hosts []*Host `json:"hosts,omitempty"`
 }
 
 // FailureDomain holds the region and zone failure domain and
@@ -241,20 +239,6 @@ type VCenter struct {
 	Datacenters []string `json:"datacenters"`
 }
 
-// Host defines host VMs to generate as part of the installation.
-type Host struct {
-	// FailureDomain refers to the name of a FailureDomain as described in https://github.com/openshift/enhancements/blob/master/enhancements/installer/vsphere-ipi-zonal.md
-	// +optional
-	FailureDomain string `json:"failureDomain"`
-	// NetworkDeviceSpec to be applied to the host
-	// +kubebuilder:validation:Required
-	NetworkDevice *NetworkDeviceSpec `json:"networkDevice"`
-	// Role defines the role of the node
-	// +kubebuilder:validation:Enum="";bootstrap;control-plane;compute
-	// +kubebuilder:validation:Required
-	Role string `json:"role"`
-}
-
 // NetworkDeviceSpec defines network config for static IP assignment.
 type NetworkDeviceSpec struct {
 	// gateway is an IPv4 or IPv6 address which represents the subnet gateway,
@@ -280,19 +264,4 @@ type NetworkDeviceSpec struct {
 	// +kubebuilder:validation:Format=ipv6
 	// +kubebuilder:example=8.8.8.8
 	Nameservers []string `json:"nameservers,omitempty"`
-}
-
-// IsControlPlane checks if the current host is a master.
-func (h *Host) IsControlPlane() bool {
-	return h.Role == ControlPlaneRole
-}
-
-// IsCompute checks if the current host is a worker.
-func (h *Host) IsCompute() bool {
-	return h.Role == ComputeRole
-}
-
-// IsBootstrap checks if the current host is a bootstrap.
-func (h *Host) IsBootstrap() bool {
-	return h.Role == BootstrapRole
 }

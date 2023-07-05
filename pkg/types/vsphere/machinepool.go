@@ -29,6 +29,19 @@ type MachinePool struct {
 	//
 	// +omitempty
 	Zones []string `json:"zones,omitempty"`
+
+	// Hosts defines network configurations to be applied by the installer. Hosts is available in TechPreview.
+	Hosts []*Host `json:"hosts,omitempty"`
+}
+
+// Host defines host VMs to generate as part of the installation.
+type Host struct {
+	// FailureDomain refers to the name of a FailureDomain as described in https://github.com/openshift/enhancements/blob/master/enhancements/installer/vsphere-ipi-zonal.md
+	// +optional
+	FailureDomain string `json:"failureDomain"`
+	// Slice of NetworkDeviceSpecs to be applied
+	// +kubebuilder:validation:Required
+	NetworkDevice *NetworkDeviceSpec `json:"networkDevice,omitempty"`
 }
 
 // OSDisk defines the disk for a virtual machine.

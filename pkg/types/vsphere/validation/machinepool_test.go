@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,6 +10,33 @@ import (
 	"github.com/openshift/installer/pkg/types"
 	"github.com/openshift/installer/pkg/types/vsphere"
 )
+
+func poolWithHosts(hostCount int, replicas int64, name string) *types.MachinePool {
+	hosts := []*vsphere.Host{}
+	for idx := 1; idx <= hostCount; idx++ {
+		hosts = append(hosts, &vsphere.Host{
+			NetworkDevice: &vsphere.NetworkDeviceSpec{
+				IPAddrs: []string{
+					fmt.Sprintf("192.168.101.%d/24", idx),
+				},
+				Gateway: "192.168.101.1",
+				Nameservers: []string{
+					"192.168.101.2",
+				},
+			},
+		})
+	}
+
+	return &types.MachinePool{
+		Name:     name,
+		Replicas: &replicas,
+		Platform: types.MachinePoolPlatform{
+			VSphere: &vsphere.MachinePool{
+				Hosts: hosts,
+			},
+		},
+	}
+}
 
 func TestValidateMachinePool(t *testing.T) {
 	cases := []struct {
@@ -180,9 +208,164 @@ func TestValidateMachinePool(t *testing.T) {
 			},
 			expectedErrMsg: `^test-path.zones: Invalid value: "unknown-zone": zone not defined in failureDomains$`,
 		},
+		{
+			name: "Static IP - valid",
+			platform: func() *vsphere.Platform {
+				p := validPlatform()
+				return p
+			}(),
+			pool: poolWithHosts(4, 3, "master"),
+		},
+		{
+			name: "Static IP - no hosts configured",
+			platform: func() *vsphere.Platform {
+				p := validPlatform()
+				return p
+			}(),
+			pool: poolWithHosts(0, 3, "master"),
+		},
+		{
+			name: "Static IP - invalid FailureDomain",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].FailureDomain = "north-pole"
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts.failureDomain: Invalid value: "north-pole": failure domain not found$`,
+		},
+		{
+			name: "Static IP - missing NetworkDevice",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice = nil
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts.networkDevice: Required value: must specify networkDevice configuration$`,
+		},
+		{
+			name: "Static IP - missing IP",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice.IPAddrs = nil
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts.ipAddrs: Required value: must specify a IP$`,
+		},
+		{
+			name: "Static IP - invalid IP",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice.IPAddrs[0] = "86.7.5.309/24"
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts.ipAddrs: Invalid value: "86.7.5.309/24": invalid CIDR address: 86.7.5.309/24$`,
+		},
+		{
+			name: "Static IP - invalid IP blank",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice.IPAddrs[0] = ""
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts.ipAddrs: Required value: must specify a IP address with CIDR$`,
+		},
+		{
+			name: "Static IP - invalid IP CIDR",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice.IPAddrs[0] = "86.7.5.309/55"
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts.ipAddrs: Invalid value: "86.7.5.309/55": invalid CIDR address: 86.7.5.309/55$`,
+		},
+		{
+			name: "Static IP - invalid IP missing CIDR",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice.IPAddrs[0] = "86.7.5.309"
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts.ipAddrs: Invalid value: "86.7.5.309": invalid CIDR address: 86.7.5.309$`,
+		},
+		{
+			name: "Static IP - valid Gateway IPv4",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice.Gateway = "192.168.100.125"
+				return pool
+			}(),
+		},
+		{
+			name: "Static IP - invalid Gateway IPv4",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice.Gateway = "86.7.5.309"
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts.gateway: Invalid value: "86.7.5.309": "86.7.5.309" is not a valid IP$`,
+		},
+		{
+			name: "Static IP - valid Gateway IPv6",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice.Gateway = "2001:db8:3333:4444:5555:6666:7777:8888"
+				return pool
+			}(),
+		},
+		{
+			name: "Static IP - invalid Gateway IPv6",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice.Gateway = "8888:666:7777:5555:3333:0000:9999:JENNY"
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts.gateway: Invalid value: "8888:666:7777:5555:3333:0000:9999:JENNY": "8888:666:7777:5555:3333:0000:9999:JENNY" is not a valid IP$`,
+		},
+		{
+			name: "Static IP - More than 3 nameservers",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "master")
+				pool.Platform.VSphere.Hosts[1].NetworkDevice.Nameservers = []string{"86.75.30.9", "86.75.30.8", "86.75.30.7", "86.75.30.6"}
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts.nameservers: Too many: 4: must have at most 3 items$`,
+		},
+		{
+			name: "Static IP - Not enough control-planes",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(3, 3, "master")
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts: Invalid value: "control-plane": not enough hosts found \(3\) to support all the configured ControlPlane replicas \(4\)$`,
+		},
+		{
+			name: "Static IP - Too many control-planes",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(5, 3, "master")
+				return pool
+			}(),
+		},
+		{
+			name: "Static IP - Not enough workers",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(2, 3, "worker")
+				return pool
+			}(),
+			expectedErrMsg: `^test-path.hosts: Invalid value: "compute": not enough hosts found \(3\) to support all the configured Compute replicas \(4\)$`,
+		},
+		{
+			name: "Static IP - Too many workers",
+			pool: func() *types.MachinePool {
+				pool := poolWithHosts(4, 3, "worker")
+				return pool
+			}(),
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.platform == nil {
+				tc.platform = validPlatform()
+			}
 			err := ValidateMachinePool(tc.platform, tc.pool, field.NewPath("test-path")).ToAggregate()
 			if tc.expectedErrMsg == "" {
 				assert.NoError(t, err)
