@@ -336,7 +336,7 @@ func TestValidateMachinePool(t *testing.T) {
 				pool := poolWithHosts(3, 3, "master")
 				return pool
 			}(),
-			expectedErrMsg: `^test-path.hosts: Invalid value: "control-plane": not enough hosts found \(3\) to support all the configured ControlPlane replicas \(4\)$`,
+			expectedErrMsg: `^test-path.hosts: Invalid value: "master": not enough hosts found \(3\) to support all the configured master machine pool replicas \(4\)$`,
 		},
 		{
 			name: "Static IP - Too many control-planes",
@@ -351,7 +351,7 @@ func TestValidateMachinePool(t *testing.T) {
 				pool := poolWithHosts(2, 3, "worker")
 				return pool
 			}(),
-			expectedErrMsg: `^test-path.hosts: Invalid value: "compute": not enough hosts found \(3\) to support all the configured Compute replicas \(4\)$`,
+			expectedErrMsg: `^test-path.hosts: Invalid value: "worker": not enough hosts found \(2\) to support all the configured worker machine pool replicas \(3\)$`,
 		},
 		{
 			name: "Static IP - Too many workers",

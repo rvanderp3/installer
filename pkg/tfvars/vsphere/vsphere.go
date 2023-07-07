@@ -79,7 +79,7 @@ func TFVars(sources TFVarsSources) ([]byte, error) {
 		ControlPlaneNetworkKargs:  []string{},
 	}
 
-	if len(sources.InstallConfig.Config.VSphere.Hosts) > 0 {
+	if len(sources.InstallConfig.Config.ControlPlane.Platform.VSphere.Hosts) > 0 {
 		logrus.Debugf("Applying static IP configs")
 		err = processGuestNetworkConfiguration(cfg, sources)
 		if err != nil {
@@ -224,20 +224,17 @@ func constructKargsFromNetworkConfig(ipAddrs []string, nameservers []string, gat
 // processGuestNetworkConfiguration takes the config and sources data and generates the kernel arguments (kargs)
 // needed to boot RHCOS with static IP configurations.
 func processGuestNetworkConfiguration(cfg *config, sources TFVarsSources) error {
-	platform := sources.InstallConfig.Config.Platform.VSphere
-
 	// Generate bootstrap karg using vsphere platform info from install-config
-	for _, host := range platform.Hosts {
-		if host.Role == vtypes.BootstrapRole {
-			logrus.Debugf("generating kargs for bootstrap.")
-			network := host.NetworkDevice
-			kargs, err := constructKargsFromNetworkConfig(network.IPAddrs, network.Nameservers, network.Gateway)
-			if err != nil {
-				return err
-			}
-			cfg.BootStrapNetworkKargs = kargs
-			break
+	if len(sources.InstallConfig.Config.ControlPlane.Platform.VSphere.Hosts) > 0 {
+		cpHosts := sources.InstallConfig.Config.ControlPlane.Platform.VSphere.Hosts
+		bootstrapHost := cpHosts[len(cpHosts)-1]
+		logrus.Debugf("generating kargs for bootstrap.")
+		network := bootstrapHost.NetworkDevice
+		kargs, err := constructKargsFromNetworkConfig(network.IPAddrs, network.Nameservers, network.Gateway)
+		if err != nil {
+			return err
 		}
+		cfg.BootStrapNetworkKargs = kargs
 	}
 
 	// Generate control plane kargs using info from machine network config

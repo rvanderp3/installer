@@ -31,15 +31,6 @@ const (
 	TagCategoryZone = "openshift-zone"
 )
 
-const (
-	// ControlPlaneRole represents control-plane nodes.
-	ControlPlaneRole = "control-plane"
-	// ComputeRole represents worker nodes.
-	ComputeRole = "compute"
-	// BootstrapRole represents bootstrap nodes.
-	BootstrapRole = "bootstrap"
-)
-
 // Platform stores any global configuration used for vsphere platforms.
 type Platform struct {
 	// VCenter is the domain name or IP address of the vCenter.

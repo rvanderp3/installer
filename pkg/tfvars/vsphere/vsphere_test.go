@@ -31,6 +31,11 @@ func createTFVarsSources(createHosts bool, ipTypes int64, cpc []*v1beta1.VSphere
 					Platform: types.Platform{
 						VSphere: &vsphere.Platform{},
 					},
+					ControlPlane: &types.MachinePool{
+						Platform: types.MachinePoolPlatform{
+							VSphere: &vsphere.MachinePool{},
+						},
+					},
 				},
 			},
 		},
@@ -38,7 +43,7 @@ func createTFVarsSources(createHosts bool, ipTypes int64, cpc []*v1beta1.VSphere
 	}
 
 	if createHosts {
-		tvs.InstallConfig.Config.VSphere.Hosts = createValidHosts(ipTypes)
+		tvs.InstallConfig.Config.ControlPlane.Platform.VSphere.Hosts = createValidHosts(ipTypes)
 	}
 
 	return tvs
@@ -47,7 +52,6 @@ func createTFVarsSources(createHosts bool, ipTypes int64, cpc []*v1beta1.VSphere
 func createValidHosts(ipTypes int64) []*vsphere.Host {
 	hosts := []*vsphere.Host{
 		{
-			Role:          "bootstrap",
 			NetworkDevice: &vsphere.NetworkDeviceSpec{},
 		},
 		// NOTE: All control plane and compute hosts info is missing since not needed for test.

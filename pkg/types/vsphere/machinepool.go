@@ -77,4 +77,8 @@ func (p *MachinePool) Set(required *MachinePool) {
 	if len(required.Zones) > 0 {
 		p.Zones = required.Zones
 	}
+
+	if len(required.Hosts) > 0 {
+		p.Hosts = required.Hosts
+	}
 }

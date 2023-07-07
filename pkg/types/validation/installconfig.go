@@ -1065,7 +1065,7 @@ func validateFeatureSet(c *types.InstallConfig) field.ErrorList {
 		}
 
 		if c.VSphere != nil {
-			if len(c.VSphere.Hosts) > 0 {
+			if c.ControlPlane.Platform.VSphere != nil && len(c.ControlPlane.Platform.VSphere.Hosts) > 0 {
 				allErrs = append(allErrs, field.Forbidden(field.NewPath("platform", "vsphere", "hosts"), errMsg))
 			}
 		}

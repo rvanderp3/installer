@@ -588,7 +588,7 @@ func (w *Worker) Generate(dependencies asset.Parents) error {
 			}
 
 			// If static IPs are configured, we must generate worker machines and scale the machinesets to 0.
-			if ic.Platform.VSphere.Hosts != nil {
+			if pool.Platform.VSphere.Hosts != nil {
 				logrus.Debug("Generating worker machines with static IPs.")
 				templateName := clusterID.InfraID + "-rhcos"
 

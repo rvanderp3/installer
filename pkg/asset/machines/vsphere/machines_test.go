@@ -33,6 +33,35 @@ controlPlane:
       memoryMB: 24576
       osDisk:
         diskSizeGB: 512
+      hosts:
+      - failureDomain: deployzone-us-east-1a
+        networkDevice:
+          ipAddrs:
+          - 192.168.101.241/23
+          gateway: 192.168.101.1
+          nameservers:
+          - 8.8.8.8
+      - failureDomain: deployzone-us-east-2a
+        networkDevice:
+          ipAddrs:
+          - 192.168.101.242/23
+          gateway: 192.168.101.1
+          nameservers:
+          - 8.8.8.8
+      - failureDomain: deployzone-us-east-3a
+        networkDevice:
+          ipAddrs:
+          - 192.168.101.243/23
+          gateway: 192.168.101.1
+          nameservers:
+          - 8.8.8.8
+      - failureDomain: deployzone-us-east-1a
+        networkDevice:
+          ipAddrs:
+          - 192.168.101.240/23
+          gateway: 192.168.101.1
+          nameservers:
+          - 8.8.8.8
   replicas: 3
 compute:
 - name: worker
@@ -47,6 +76,31 @@ compute:
       memoryMB: 24576
       osDisk:
         diskSizeGB: 512
+      hosts:
+      - role: compute
+        failureDomain: deployzone-us-east-1a
+        networkDevice:
+          ipAddrs:
+          - 192.168.101.244/24
+          gateway: 192.168.101.1        
+          nameservers:
+          - 192.168.101.2
+      - role: compute
+        failureDomain: deployzone-us-east-2a
+        networkDevice:
+          ipAddrs:
+          - 192.168.101.245/24
+          gateway: 192.168.101.1        
+          nameservers:
+          - 192.168.101.2
+      - role: compute
+        failureDomain: deployzone-us-east-3a
+        networkDevice:
+          ipAddrs:
+          - 192.168.101.246/24
+          gateway: 192.168.101.1        
+          nameservers:
+          - 192.168.101.2
   replicas: 3
 metadata:
   name: test-cluster
@@ -110,62 +164,6 @@ platform:
         networks:
         - network1
         datastore: /dc4/datastore/datastore4
-    hosts:
-    - role: bootstrap
-      networkDevice:
-        ipaddrs:
-        - 192.168.101.240/24
-        gateway: 192.168.101.1        
-        nameservers:
-        - 192.168.101.2
-    - role: control-plane
-      failureDomain: deployzone-us-east-1a
-      networkDevice:
-        ipAddrs:
-        - 192.168.101.241/24
-        gateway: 192.168.101.1        
-        nameservers:
-        - 192.168.101.2
-    - role: control-plane
-      failureDomain: deployzone-us-east-2a
-      networkDevice:
-        ipAddrs:
-        - 192.168.101.242/24
-        gateway: 192.168.101.1
-        nameservers:
-        - 192.168.101.2
-    - role: control-plane
-      failureDomain: deployzone-us-east-3a
-      networkDevice:
-        ipAddrs:
-        - 192.168.101.243/24
-        gateway: 192.168.101.1        
-        nameservers:
-        - 192.168.101.2
-    - role: compute
-      failureDomain: deployzone-us-east-1a
-      networkDevice:
-        ipAddrs:
-        - 192.168.101.244/24
-        gateway: 192.168.101.1        
-        nameservers:
-        - 192.168.101.2
-    - role: compute
-      failureDomain: deployzone-us-east-2a
-      networkDevice:
-        ipAddrs:
-        - 192.168.101.245/24
-        gateway: 192.168.101.1        
-        nameservers:
-        - 192.168.101.2
-    - role: compute
-      failureDomain: deployzone-us-east-3a
-      networkDevice:
-        ipAddrs:
-        - 192.168.101.246/24
-        gateway: 192.168.101.1        
-        nameservers:
-        - 192.168.101.2
 pullSecret:
 sshKey:`
 
@@ -433,14 +431,14 @@ func TestHostsToMachines(t *testing.T) {
 	}{
 		{
 			testCase:      "Static IP - ControlPlane",
-			machinePool:   &machinePoolValidZones,
+			machinePool:   installConfig.ControlPlane,
 			installConfig: installConfig,
 			role:          "master",
 			machineCount:  3,
 		},
 		{
 			testCase:      "Static IP - Compute",
-			machinePool:   &machinePoolValidZones,
+			machinePool:   &installConfig.Compute[0],
 			installConfig: installConfig,
 			role:          "worker",
 			machineCount:  3,

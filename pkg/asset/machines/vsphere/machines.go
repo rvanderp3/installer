@@ -24,6 +24,8 @@ func Machines(clusterID string, config *types.InstallConfig, pool *types.Machine
 		return nil, fmt.Errorf("non-VSphere machine-pool: %q", poolPlatform)
 	}
 
+	logrus.Debugf("Processing pool %v", pool.Name)
+
 	var failureDomain vsphere.FailureDomain
 	var machines []machineapi.Machine
 	platform := config.Platform.VSphere
@@ -43,15 +45,18 @@ func Machines(clusterID string, config *types.InstallConfig, pool *types.Machine
 
 	// Create hosts to populate from.  Copying so we can remove without changing original
 	// and only put in the ones that match the role.
-	var hosts []*vsphere.Host
-	if config.Platform.VSphere.Hosts != nil {
+	//var hosts []*vsphere.Host
+	/*if config.Platform.VSphere.Hosts != nil {
 		for _, host := range config.Platform.VSphere.Hosts {
 			if (host.IsCompute() && role == "worker") || (host.IsControlPlane() && role == "master") {
 				logrus.Debugf("Adding host for static ip assignment: %v - %v", host.FailureDomain, host.NetworkDevice.IPAddrs[0])
 				hosts = append(hosts, host)
 			}
 		}
-	}
+	}*/
+	hosts := pool.Platform.VSphere.Hosts
+
+	logrus.Debugf("Found hosts %v", hosts)
 
 	for idx := int64(0); idx < replicas; idx++ {
 		logrus.Debugf("Creating %v machine %v", role, idx)
@@ -59,6 +64,7 @@ func Machines(clusterID string, config *types.InstallConfig, pool *types.Machine
 		desiredZone := mpool.Zones[int(idx)%numOfZones]
 		if hosts != nil && int(idx) < len(hosts) {
 			host = hosts[idx]
+			logrus.Debugf("Using host %v", host)
 			if host.FailureDomain != "" {
 				desiredZone = host.FailureDomain
 			}
@@ -120,6 +126,7 @@ func Machines(clusterID string, config *types.InstallConfig, pool *types.Machine
 // field in the provider spec.  The function will use the desired zone to determine which config
 // to apply and then remove that host config from the hosts array.
 func applyNetworkConfig(host *vsphere.Host, provider *machineapi.VSphereMachineProviderSpec) {
+	logrus.Debugf("Applying network config %v", host)
 	if host != nil {
 		networkDevice := host.NetworkDevice
 		if networkDevice != nil {

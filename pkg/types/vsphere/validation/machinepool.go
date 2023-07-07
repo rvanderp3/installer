@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/openshift/installer/pkg/types"
@@ -76,8 +77,8 @@ func ValidateMachinePool(platform *vsphere.Platform, machinePool *types.MachineP
 		}
 	}
 	if len(vspherePool.Hosts) > 0 {
-		validateHosts(platform, machinePool)
-		//allErrs = append(allErrs, ) )
+		err := validateHosts(platform, machinePool, fldPath.Child("hosts"))
+		allErrs = append(allErrs, err...)
 	}
 	return allErrs
 }
@@ -86,6 +87,7 @@ func ValidateMachinePool(platform *vsphere.Platform, machinePool *types.MachineP
 func validateHosts(platform *vsphere.Platform, pool *types.MachinePool, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	hosts := pool.Platform.VSphere.Hosts
+	logrus.Debug("Validating hosts")
 	// Validate hosts counts match desired replicas
 	allErrs = append(allErrs, validateHostsCount(pool, fldPath)...)
 
@@ -113,17 +115,17 @@ func validateHostsCount(pool *types.MachinePool, fldPath *field.Path) field.Erro
 	allErrs := field.ErrorList{}
 
 	requiredHosts := *pool.Replicas
+	// control-plane machine pool needs one extra host definition for the bootstrap node.
 	if pool.Name == types.MachinePoolControlPlaneRoleName {
 		requiredHosts++
 	}
 
 	numberOfHosts := int64(len(pool.Platform.VSphere.Hosts))
 	if numberOfHosts < requiredHosts {
-		errMsg := fmt.Sprintf("not enough hosts found (%v) to support all the configured machine pool replicas (%v)", numberOfHosts, requiredHosts)
-		allErrs = append(allErrs, field.Invalid(fldPath, "machine-pool", errMsg))
+		errMsg := fmt.Sprintf("not enough hosts found (%v) to support all the configured %v machine pool replicas (%v)", numberOfHosts, pool.Name, requiredHosts)
+		allErrs = append(allErrs, field.Invalid(fldPath, pool.Name, errMsg))
 	} else if numberOfHosts > requiredHosts {
-		errMsg := fmt.Sprintf("too many hosts found (%v) for the configured machine pool (%v)", numberOfHosts, requiredHosts)
-		allErrs = append(allErrs, field.Invalid(fldPath, "machine-pool", errMsg))
+		logrus.Warnf("too many hosts found (%v) for the configured %v machine pool (%v)", numberOfHosts, pool.Name, requiredHosts)
 	}
 	return allErrs
 }
