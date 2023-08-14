@@ -261,6 +261,9 @@ replace github.com/openshift/assisted-service/models => github.com/openshift/ass
 // https://bugzilla.redhat.com/show_bug.cgi?id=2064702
 replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
 
+// TO-DO: temporary vendor bump to pull in unmerged proposed API changes
+replace github.com/openshift/api => github.com/rvanderp3/api v0.0.0-20230814154220-e5db5364d550
+
 // https://bugzilla.redhat.com/show_bug.cgi?id=2100495
 replace golang.org/x/text => golang.org/x/text v0.3.7
 

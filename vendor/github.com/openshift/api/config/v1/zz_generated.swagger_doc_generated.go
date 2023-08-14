@@ -1625,6 +1625,7 @@ var map_VSpherePlatformTopology = map[string]string{
 	"datastore":      "datastore is the absolute path of the datastore in which the virtual machine is located. The absolute path is of the form /<datacenter>/datastore/<datastore> The maximum length of the path is 2048 characters.",
 	"resourcePool":   "resourcePool is the absolute path of the resource pool where virtual machines will be created. The absolute path is of the form /<datacenter>/host/<cluster>/Resources/<resourcepool>. The maximum length of the path is 2048 characters.",
 	"folder":         "folder is the absolute path of the folder where virtual machines are located. The absolute path is of the form /<datacenter>/vm/<folder>. The maximum length of the path is 2048 characters.",
+	"template":       "template is the inventory path of the virtual machine or template that will be used for cloning.",
 }
 
 func (VSpherePlatformTopology) SwaggerDoc() map[string]string {

@@ -1011,6 +1011,14 @@ type VSpherePlatformTopology struct {
 	// +kubebuilder:validation:Pattern=`^/.*?/vm/.*?`
 	// +optional
 	Folder string `json:"folder,omitempty"`
+
+	// template is the inventory path of the virtual machine or template
+	// that will be used for cloning.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=2048
+	// +kubebuilder:validation:Pattern=`^/.*?/vm/.*?`
+	// +optional
+	Template string `json:"template,omitempty"`
 }
 
 // VSpherePlatformVCenterSpec stores the vCenter connection fields.
