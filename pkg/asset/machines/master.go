@@ -444,10 +444,6 @@ func (m *Master) Generate(dependencies asset.Parents) error {
 			return errors.Wrap(err, "failed to create master machine objects")
 		}
 
-		if ic.FeatureSet != configv1.TechPreviewNoUpgrade {
-			controlPlaneMachineSet = nil
-		}
-
 		vsphere.ConfigMasters(machines, clusterID.InfraID)
 	case powervstypes.Name:
 		mpool := defaultPowerVSMachinePoolPlatform(ic)
