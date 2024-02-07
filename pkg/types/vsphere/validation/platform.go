@@ -3,6 +3,7 @@ package validation
 import (
 	"fmt"
 	"net"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -240,6 +241,11 @@ func validateFailureDomains(p *vsphere.Platform, fldPath *field.Path, isLegacyUp
 				return append(allErrs, field.Invalid(topologyFld.Child("resourcePool"), resourcePool, fmt.Sprintf("resource pool must be in compute cluster %s", failureDomain.Topology.ComputeCluster)))
 			}
 		}
+
+		p.FailureDomains[index].Topology.ComputeCluster = filepath.Clean(p.FailureDomains[index].Topology.ComputeCluster)
+		p.FailureDomains[index].Topology.Datastore = filepath.Clean(p.FailureDomains[index].Topology.Datastore)
+		p.FailureDomains[index].Topology.Template = filepath.Clean(p.FailureDomains[index].Topology.Template)
+		p.FailureDomains[index].Topology.ResourcePool = filepath.Clean(p.FailureDomains[index].Topology.ResourcePool)
 	}
 
 	return allErrs

@@ -3,6 +3,7 @@ package vsphere
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -212,11 +213,11 @@ func provider(clusterID string, vcenter *vsphere.VCenter, failureDomain vsphere.
 	networkDeviceSpec := make([]machineapi.NetworkDeviceSpec, len(failureDomain.Topology.Networks))
 
 	// If failureDomain.Topology.Folder is empty this will be used
-	folder := fmt.Sprintf("/%s/vm/%s", failureDomain.Topology.Datacenter, clusterID)
+	folder := filepath.Clean(fmt.Sprintf("/%s/vm/%s", failureDomain.Topology.Datacenter, clusterID))
 
 	// If failureDomain.Topology.ResourcePool is empty this will be used
 	// computeCluster is required to be a path
-	resourcePool := fmt.Sprintf("%s/Resources", failureDomain.Topology.ComputeCluster)
+	resourcePool := filepath.Clean(fmt.Sprintf("%s/Resources", failureDomain.Topology.ComputeCluster))
 
 	if failureDomain.Topology.Folder != "" {
 		folder = failureDomain.Topology.Folder
