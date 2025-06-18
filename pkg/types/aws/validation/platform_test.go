@@ -88,6 +88,26 @@ func TestValidatePlatform(t *testing.T) {
 			expected: `^test-path\.serviceEndpoints\[0\]\.url: Invalid value: "(.*)": no path or request parameters must be provided, "/\?foo=some" was provided$`,
 		},
 		{
+			name: "valid dedicated hosts",
+			platform: &aws.Platform{
+				HostAffinity: "default",
+				HostID: "h-09dcf61cb388b0149",
+			},
+		},
+		{
+			name: "invalid dedicated hosts - invalid affinity type",
+			platform: &aws.Platform{
+				HostAffinity: "unknown",
+				HostID: "h-09dcf61cb388b0149",
+			},
+		},
+		{
+			name: "invalid dedicated hosts - missing hostID",
+			platform: &aws.Platform{
+				HostAffinity: "host",				
+			},
+		},
+		{
 			name: "valid url for service endpoint",
 			platform: &aws.Platform{
 				Region: "us-east-1",

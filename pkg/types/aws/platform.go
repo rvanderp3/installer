@@ -127,7 +127,7 @@ type Platform struct {
 	// +kubebuilder:default:="Disabled"
 	// +default="Disabled"
 	// +kubebuilder:validation:Enum="Enabled";"Disabled"
-	UserProvisionedDNS dns.UserProvisionedDNS `json:"userProvisionedDNS,omitempty"`
+	UserProvisionedDNS dns.UserProvisionedDNS `json:"userProvisionedDNS,omitempty"`	
 }
 
 // ServiceEndpoint store the configuration for services to
