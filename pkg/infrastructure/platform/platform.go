@@ -20,6 +20,7 @@ import (
 	awstypes "github.com/openshift/installer/pkg/types/aws"
 	azuretypes "github.com/openshift/installer/pkg/types/azure"
 	baremetaltypes "github.com/openshift/installer/pkg/types/baremetal"
+	"github.com/openshift/installer/pkg/types/external"
 	"github.com/openshift/installer/pkg/types/featuregates"
 	gcptypes "github.com/openshift/installer/pkg/types/gcp"
 	ibmcloudtypes "github.com/openshift/installer/pkg/types/ibmcloud"
@@ -51,6 +52,8 @@ func ProviderForPlatform(platform string, fg featuregates.FeatureGate) (infrastr
 		return clusterapi.InitializeProvider(&powervscapi.Provider{}), nil
 	case openstacktypes.Name, powervctypes.Name:
 		return clusterapi.InitializeProvider(openstackcapi.Provider{}), nil
+	case external.Name:
+		return clusterapi.InitializeProvider(&clusterapi.ExternalProvider{}), nil
 	case vspheretypes.Name:
 		return clusterapi.InitializeProvider(vspherecapi.Provider{}), nil
 	}

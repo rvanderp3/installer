@@ -117,6 +117,11 @@ func (in *ClusterPlatformMetadata) DeepCopyInto(out *ClusterPlatformMetadata) {
 		*out = new(azure.Metadata)
 		**out = **in
 	}
+	if in.External != nil {
+		in, out := &in.External, &out.External
+		*out = new(external.Metadata)
+		**out = **in
+	}
 	if in.GCP != nil {
 		in, out := &in.GCP, &out.GCP
 		*out = new(gcp.Metadata)

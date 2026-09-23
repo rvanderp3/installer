@@ -35,6 +35,7 @@ import (
 	"github.com/openshift/installer/pkg/clusterapi/internal/process/addr"
 	"github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/azure"
+	"github.com/openshift/installer/pkg/types/external"
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/nutanix"
@@ -60,6 +61,10 @@ const (
 	// ArtifactsDir is the directory where output (manifests, kubeconfig, etc.)
 	// related to CAPI-based installs are stored.
 	ArtifactsDir = ".clusterapi_output"
+
+	// RuntimeProviderDirEnv points to a directory containing providers.yaml and
+	// the external CAPI provider binaries and component manifests.
+	RuntimeProviderDirEnv = "OPENSHIFT_INSTALL_CAPI_PROVIDER_DIR"
 )
 
 // Interface is the interface for the cluster-api system.
@@ -412,6 +417,14 @@ func (c *system) Run(ctx context.Context) error { //nolint:gocyclo
 				},
 			),
 		)
+	case external.Name:
+		runtimeProviders, err := LoadRuntimeProviders(os.Getenv(RuntimeProviderDirEnv))
+		if err != nil {
+			return fmt.Errorf("failed to load runtime CAPI providers: %w", err)
+		}
+		for _, provider := range runtimeProviders {
+			controllers = append(controllers, c.getRuntimeController(provider))
+		}
 	case powervs.Name:
 		// We need to prompt for missing variables because NewPISession requires them!
 		bxClient, err := powervsic.NewBxClient(true)
@@ -575,6 +588,16 @@ func (c *system) getInfrastructureController(provider *Provider, args []string, 
 		Components: manifests,
 		Args:       args,
 		Env:        env,
+	}
+}
+
+func (c *system) getRuntimeController(provider RuntimeProvider) *controller {
+	return &controller{
+		Name:       fmt.Sprintf("%s runtime CAPI provider", provider.Name),
+		Path:       provider.Binary,
+		Components: provider.Components,
+		Args:       provider.Args,
+		Env:        provider.Env,
 	}
 }
 

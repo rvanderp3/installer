@@ -107,7 +107,11 @@ func (m *Metadata) Generate(_ context.Context, parents asset.Parents) (err error
 		if err != nil {
 			return fmt.Errorf("failed to initialize PowerVS: %w", err)
 		}
-	case externaltypes.Name, nonetypes.Name:
+	case externaltypes.Name:
+		metadata.ClusterPlatformMetadata.External = &externaltypes.Metadata{
+			PlatformName: installConfig.Config.Platform.External.PlatformName,
+		}
+	case nonetypes.Name:
 	case nutanixtypes.Name:
 		metadata.ClusterPlatformMetadata.Nutanix = nutanix.Metadata(installConfig.Config)
 	default:

@@ -5,6 +5,7 @@ import (
 	"github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/azure"
 	"github.com/openshift/installer/pkg/types/baremetal"
+	"github.com/openshift/installer/pkg/types/external"
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/nutanix"
@@ -34,6 +35,7 @@ type ClusterPlatformMetadata struct {
 	AWS       *aws.Metadata       `json:"aws,omitempty"`
 	OpenStack *openstack.Metadata `json:"openstack,omitempty"`
 	Azure     *azure.Metadata     `json:"azure,omitempty"`
+	External  *external.Metadata  `json:"external,omitempty"`
 	GCP       *gcp.Metadata       `json:"gcp,omitempty"`
 	IBMCloud  *ibmcloud.Metadata  `json:"ibmcloud,omitempty"`
 	BareMetal *baremetal.Metadata `json:"baremetal,omitempty"`
@@ -62,6 +64,9 @@ func (cpm *ClusterPlatformMetadata) Platform() string {
 	}
 	if cpm.Azure != nil {
 		return azure.Name
+	}
+	if cpm.External != nil {
+		return external.Name
 	}
 	if cpm.GCP != nil {
 		return gcp.Name
